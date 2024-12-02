@@ -16,7 +16,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Sistem Pendukung Keputusan - Analytical Hierarchy Process",
   description:
-    "Sebuah sistem pendukung keputusan yang menggunakan metode Analytical Hierarchy Process.",
+    "Sebuah sistem pemilihan laptop terbaik menggunakan metode Analytical Hierarchy Process (AHP) dengan bahasa pemrograman TypeScript dan framework Next.js",
 };
 
 export default function RootLayout({
