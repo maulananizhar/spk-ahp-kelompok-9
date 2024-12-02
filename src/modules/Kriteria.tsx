@@ -1,17 +1,4 @@
-import {
-  BsBox,
-  BsCalculator,
-  BsFloppy,
-  BsPlus,
-  BsTable,
-  BsTriangle,
-} from "react-icons/bs";
-import {
-  Menu as MenuInner,
-  MenuItem,
-  MenuButton,
-  MenuProps,
-} from "@szhsin/react-menu";
+import { BsBox, BsCalculator, BsFloppy, BsPlus, BsTable } from "react-icons/bs";
 import { FormEvent, useEffect, useState } from "react";
 import axios from "axios";
 import { KriteriaType } from "@/types/kriteria";
@@ -28,13 +15,6 @@ import { processMatrix } from "@/libs/processMatrix";
 import { calculateLambda } from "@/libs/calculateLambda";
 import { riGenerate } from "@/libs/riGenerate";
 import { getEigenValue } from "@/libs/getEigenValue";
-
-const Menu = (props: MenuProps) => (
-  <MenuInner
-    {...props}
-    menuClassName={`bg-white border border-gray-50 py-1 w-20 rounded shadow`}
-  />
-);
 
 type APIType = {
   status: string;
@@ -63,7 +43,6 @@ export default function Kriteria({
 }: {
   changeKriteriaEigen: (data: { [kriteria: string]: number }) => void;
 }) {
-  const [entries, setEntries] = useState(10);
   const [data, setData] = useState<APIType>();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [action, setAction] = useState("");
@@ -249,7 +228,7 @@ export default function Kriteria({
       setCI(0);
       setRI(0);
       setCR(0);
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(timeout);
   }, [pair]);
@@ -398,56 +377,7 @@ export default function Kriteria({
           </div>
           <div className="flex flex-col py-4 px-6 bg-white">
             <div className="flex flex-row justify-between mb-4">
-              <div className="flex flex-row items-center gap-2">
-                {/* <p>Show</p>
-                <Menu
-                  menuButton={
-                    <MenuButton className="flex flex-row items-center border rounded px-3 py-1">
-                      {entries}{" "}
-                      <div className="flex flex-col ml-2 scale-75 gap-[0.5]">
-                        <BsTriangle className="text-xs" />
-                        <BsTriangle className="text-xs rotate-180" />
-                      </div>
-                    </MenuButton>
-                  }>
-                  <MenuItem
-                    className="hover:bg-gray-100 px-2 cursor-pointer"
-                    onClick={() => {
-                      setEntries(5);
-                    }}>
-                    5
-                  </MenuItem>
-                  <MenuItem
-                    className="hover:bg-gray-100 px-2 cursor-pointer"
-                    onClick={() => {
-                      setEntries(10);
-                    }}>
-                    10
-                  </MenuItem>
-                  <MenuItem
-                    className="hover:bg-gray-100 px-2 cursor-pointer"
-                    onClick={() => {
-                      setEntries(25);
-                    }}>
-                    25
-                  </MenuItem>
-                  <MenuItem
-                    className="hover:bg-gray-100 px-2 cursor-pointer"
-                    onClick={() => {
-                      setEntries(50);
-                    }}>
-                    50
-                  </MenuItem>
-                  <MenuItem
-                    className="hover:bg-gray-100 px-2 cursor-pointer"
-                    onClick={() => {
-                      setEntries(100);
-                    }}>
-                    100
-                  </MenuItem>
-                </Menu>
-                <p>entries</p> */}
-              </div>
+              <div className="flex flex-row items-center gap-2"></div>
               <div className="flex flex-row items-center">
                 <p>Search :</p>
                 <input
