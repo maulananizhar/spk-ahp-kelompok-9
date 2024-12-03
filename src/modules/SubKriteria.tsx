@@ -28,6 +28,7 @@ import { calculateLambda } from "@/libs/calculateLambda";
 import { riGenerate } from "@/libs/riGenerate";
 import { getEigenValue } from "@/libs/getEigenValue";
 import SubKriteriaTable from "@/components/SubKriteriaTable";
+import { Mosaic } from "react-loading-indicators";
 
 const Menu = (props: MenuProps) => (
   <MenuInner
@@ -70,6 +71,7 @@ export default function Kriteria({
   const [action, setAction] = useState("");
   const [kriteria, setKriteria] = useState<string>("Merk");
   const [parent, setParent] = useState<KriteriaType[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
   const [oldName, setOldName] = useState("");
@@ -265,6 +267,10 @@ export default function Kriteria({
   }, [kriteria]);
 
   useEffect(() => {
+    if (pair) {
+      setLoading(false);
+    }
+
     const timeout = setTimeout(() => {
       console.log(pair);
       setMatrix(transformMatrix(pair || []));
@@ -315,6 +321,15 @@ export default function Kriteria({
   const notifyAddData = () => toast.success("Kriteria berhasil ditambahkan!");
   const notifyEditData = () => toast.success("Kriteria berhasil diubah!");
   const notifyUpdatePair = () => toast.success("Matriks berhasil diupdate!");
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[80vh]">
+        <Mosaic color="#1242A2" size="large" />
+        <p className="text-azure-700 font-bold text-2xl mt-4">Mohon tunggu</p>
+      </div>
+    );
+  }
 
   return (
     <>

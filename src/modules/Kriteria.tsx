@@ -15,6 +15,7 @@ import { processMatrix } from "@/libs/processMatrix";
 import { calculateLambda } from "@/libs/calculateLambda";
 import { riGenerate } from "@/libs/riGenerate";
 import { getEigenValue } from "@/libs/getEigenValue";
+import { Mosaic } from "react-loading-indicators";
 
 type APIType = {
   status: string;
@@ -46,6 +47,7 @@ export default function Kriteria({
   const [data, setData] = useState<APIType>();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [action, setAction] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
   const [oldName, setOldName] = useState("");
@@ -217,10 +219,14 @@ export default function Kriteria({
   }, []);
 
   // useEffect(() => {
-  //   initPair();
+  //   setLoading(false);
   // }, [data]);
 
   useEffect(() => {
+    if (pair) {
+      setLoading(false);
+    }
+
     const timeout = setTimeout(() => {
       console.log(pair);
       setMatrix(transformMatrix(pair || []));
@@ -271,6 +277,15 @@ export default function Kriteria({
   const notifyAddData = () => toast.success("Kriteria berhasil ditambahkan!");
   const notifyEditData = () => toast.success("Kriteria berhasil diubah!");
   const notifyUpdatePair = () => toast.success("Matriks berhasil diupdate!");
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[80vh]">
+        <Mosaic color="#1242A2" size="large" />
+        <p className="text-azure-700 font-bold text-2xl mt-4">Mohon tunggu</p>
+      </div>
+    );
+  }
 
   return (
     <>
