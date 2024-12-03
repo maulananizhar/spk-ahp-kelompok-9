@@ -65,3 +65,20 @@ input[type="number"] {
 html {
   background-color: #f0f1f3;
 }
+
+.node__root > circle {
+  fill: #1242a2;
+  stroke: #1242a2;
+}
+
+.node__branch > circle {
+  fill: #e2f0ff;
+  stroke-width: 1px;
+  stroke: #1242a2;
+}
+
+.node__leaf > circle {
+  fill: transparent;
+  stroke-width: 1px;
+  stroke: #1242a2;
+}

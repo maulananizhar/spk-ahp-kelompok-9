@@ -172,7 +172,7 @@ export default function Home() {
             ) : menu === "alternatif" ? (
               <p>alternatif</p>
             ) : menu === "perhitungan" ? (
-              <Perhitungan />
+              <Perhitungan eigen={eigen} />
             ) : menu === "penilaian" ? (
               <p>penilaian</p>
             ) : (
