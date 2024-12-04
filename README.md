@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Sebuah sistem pemilihan laptop terbaik menggunakan metode Analytical Hierarchy Process (AHP) dengan bahasa pemrograman TypeScript dan framework Next.js
 
-## Getting Started
+## Penjelasan
 
-First, run the development server:
+Aplikasi ini dibuat menggunakan TypeScript dan framework Next.js. Aplikasi ini merupakan sistem pemilihan laptop terbaik menggunakan metode Analytical Hierarchy Process (AHP). AHP adalah metode yang digunakan untuk mengambil keputusan dengan mempertimbangkan beberapa kriteria dan alternatif yang ada. AHP memerlukan matriks perbandingan berpasangan antar kriteria dan alternatif. Matriks perbandingan berpasangan ini akan diolah menggunakan metode AHP untuk mendapatkan nilai prioritas dari alternatif yang ada.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Persyaratan
+
+- Node.js v20.16.0
+- npm v10.9.0
+- Mongod v8.0.1
+
+## Cara Menjalankan
+
+1. Clone repository ini
+2. Buka terminal dan arahkan ke direktori repository
+3. Install dependencies dengan perintah
+
+```node
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Build aplikasi dengan perintah
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```node
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+5. Jalankan aplikasi dengan perintah
 
-## Learn More
+```node
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Buka browser dan akses [http://localhost:3000](http://localhost:3000) atau [http://127.0.0.1:3000](http://127.0.0.1:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Fitur
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- CRUD pada data kriteria
+- CRUD pada data sub-kriteria
+- CRUD pada data alternatif (on progress)
+- Mengelola matriks perbandingan berpasangan antar kriteria
+- Mengelola matriks perbandingan berpasangan antar sub-kriteria
+- Melihat hasil perhitungan AHP dalam bentuk grafik
+- Melihat ranking alternatif berdasarkan hasil perhitungan AHP
