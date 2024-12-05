@@ -1,9 +1,4 @@
-import {
-  MongoClient,
-  MongoServerError,
-  ObjectId,
-  ServerApiVersion,
-} from "mongodb";
+import { MongoClient, MongoServerError, ServerApiVersion } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URL || "", {
   serverApi: {
@@ -21,7 +16,7 @@ export async function GET() {
       .db(process.env.DB_NAME)
       .collection("eigen")
       .findOne({
-        _id: new ObjectId("674ca2e1bd8e2e7ec4121464"),
+        lingkungan: "laptop",
       });
 
     return Response.json(

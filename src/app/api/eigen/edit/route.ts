@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       .collection("eigen")
       .updateOne(
         {
-          _id: new ObjectId("674ca2e1bd8e2e7ec4121464"),
+          lingkungan: "laptop",
         },
         {
           $set: {
