@@ -15,6 +15,7 @@ import Kriteria from "@/modules/Kriteria";
 import SubKriteria from "@/modules/SubKriteria";
 import Perhitungan from "@/modules/Perhitungan";
 import axios from "axios";
+import Alternatif from "@/modules/Alternatif";
 
 interface EigenType {
   kriteria?: {
@@ -170,7 +171,7 @@ export default function Home() {
             ) : menu === "sub-kriteria" ? (
               <SubKriteria changeSubKriteriaEigen={changeSubKriteriaEigen} />
             ) : menu === "alternatif" ? (
-              <p>alternatif</p>
+              <Alternatif />
             ) : menu === "perhitungan" ? (
               <Perhitungan eigen={eigen} />
             ) : menu === "penilaian" ? (
