@@ -151,7 +151,7 @@ export default function Kriteria({
       );
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message);
+        console.error(err.response?.data.message);
       }
     }
   }
@@ -202,6 +202,7 @@ export default function Kriteria({
       closeModal();
       fetchData();
       notifyEditData();
+      initPair();
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setModalInfo(err.response?.data.message);
@@ -219,7 +220,10 @@ export default function Kriteria({
   }, []);
 
   // useEffect(() => {
-  //   setLoading(false);
+  //   if (data) {
+  // initPair();
+  // console.log("woke");
+  //   }
   // }, [data]);
 
   useEffect(() => {
@@ -228,7 +232,6 @@ export default function Kriteria({
     }
 
     const timeout = setTimeout(() => {
-      console.log(pair);
       setMatrix(transformMatrix(pair || []));
       setLambda([]);
       setCI(0);
@@ -448,24 +451,7 @@ export default function Kriteria({
             <BsBox />
             <p className="font-semibold">Perbandingan Kriteria</p>
           </div>
-          <div>
-            {/* <button
-              className="bg-azure-700 text-white px-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150"
-              onClick={() => {
-                addPair(pair || []);
-                notifyUpdatePair();
-                console.log(normalizationMatrix(transformMatrix(pair || [])));
-                // setLambda(
-                //   calculateLambda(
-                //     processMatrix(normalization || []),
-                //     matrix || []
-                //   )
-                // );
-              }}>
-              <BsFloppy className="mr-2 stroke-[0.2]" />
-              <p>Simpan Perbandingan</p>
-            </button> */}
-          </div>
+          <div></div>
         </div>
 
         <div>
