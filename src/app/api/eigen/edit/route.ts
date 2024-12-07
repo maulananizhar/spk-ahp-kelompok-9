@@ -1,9 +1,4 @@
-import {
-  MongoClient,
-  MongoServerError,
-  ObjectId,
-  ServerApiVersion,
-} from "mongodb";
+import { MongoClient, MongoServerError, ServerApiVersion } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URL || "", {
   serverApi: {
