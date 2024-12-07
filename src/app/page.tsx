@@ -50,7 +50,7 @@ export default function Home() {
       setEigenData(response.data.data);
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message);
+        console.error(err.response?.data.message);
       }
     }
   }
@@ -66,7 +66,7 @@ export default function Home() {
       );
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message);
+        console.error(err.response?.data.message);
       }
     }
   }
@@ -82,8 +82,19 @@ export default function Home() {
   }, [eigenData]);
 
   useEffect(() => {
+    async function updateAlternatif() {
+      try {
+        await axios.post(`/api/alternatif/edit-all`);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          console.error(err.response?.data.message);
+        }
+      }
+    }
+
     if (eigenData) {
       editEigen(JSON.stringify(eigen));
+      updateAlternatif();
       return;
     }
   }, [eigen]);

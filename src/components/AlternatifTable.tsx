@@ -1,13 +1,40 @@
+"use client";
+
+import axios from "axios";
+import toast from "react-hot-toast";
+
 interface AlternatifType {
+  _id: string;
   name: string;
   kriteria: { [kriteria: string]: string };
+  eigen: number;
 }
 
 export default function AlternatifTable({
   alternatif,
+  setName,
+  setOldName,
+  setAction,
+  openModal,
+  fetchData,
 }: {
   alternatif: AlternatifType[];
+  setName: (name: string) => void;
+  setOldName: (name: string) => void;
+  setAction: (action: string) => void;
+  openModal: () => void;
+  fetchData: () => void;
 }) {
+  async function deleteData(id: string) {
+    await axios.delete(`/api/alternatif/delete`, {
+      data: { id: id },
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    fetchData();
+  }
+
+  const notifyDeleteData = () => toast.error("Alternatif berhasil dihapus!");
+
   return (
     <>
       <table className="w-full border">
@@ -24,6 +51,7 @@ export default function AlternatifTable({
                 ))}
               </>
             )}
+            <th className="w-1/12 border py-2 px-3">Skor</th>
             <th className="w-2/12 border py-2 px-3">Aksi</th>
           </tr>
         </thead>
@@ -39,6 +67,9 @@ export default function AlternatifTable({
                   {value.charAt(0).toUpperCase() + value.slice(1)}
                 </td>
               ))}
+              <td className="w-1/12 text-center border py-2 px-3">
+                {(item.eigen * 100000).toFixed(0)}
+              </td>
               <td className="w-2/12 border py-2 px-3">
                 <div className="flex flex-row justify-evenly text-center">
                   <button
@@ -54,7 +85,7 @@ export default function AlternatifTable({
                   <button
                     className="uppercase text-xs border border-red-500 rounded px-2 py-1 bg-red-100 text-red-500 font-bold active:scale-105 duration-150"
                     onClick={() => {
-                      deleteData(item.name);
+                      deleteData(item._id);
                       notifyDeleteData();
                     }}>
                     Hapus

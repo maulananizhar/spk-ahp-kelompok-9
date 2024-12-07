@@ -1,5 +1,11 @@
-import { BsBox, BsPlus, BsTable } from "react-icons/bs";
-import { FormEvent, useEffect, useState } from "react";
+import {
+  BsBox,
+  BsCaretLeftFill,
+  BsCaretRightFill,
+  BsPlus,
+  BsTable,
+} from "react-icons/bs";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "react-modal";
 import "rsuite/Slider/styles/index.css";
@@ -11,11 +17,21 @@ import AlternatifTable from "@/components/AlternatifTable";
 type APIType = {
   status: string;
   data: AlternatifType[];
+  message: string;
+  length: number;
 };
 
+interface OptionData {
+  _id: string;
+  kriteria: string;
+  name: string;
+}
+
 interface AlternatifType {
+  _id: string;
   name: string;
   kriteria: { [kriteria: string]: string };
+  eigen: number;
 }
 
 const customStyles = {
@@ -24,7 +40,7 @@ const customStyles = {
   },
   content: {
     width: "30%",
-    height: "50%",
+    height: "40rem",
     margin: "auto",
     padding: "0rem",
     inset: "0",
@@ -42,26 +58,62 @@ export default function Alternatif() {
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
-  const [kriteria, setKriteria] = useState<{ [kriteria: string]: string }>();
   const [oldName, setOldName] = useState("");
+  const [optionData, setOptionData] = useState<OptionData[]>([]);
+  const [formValues, setFormValues] = useState<Record<string, string>>({});
+
   const [modalInfo, setModalInfo] = useState("Isilah form di bawah ini!");
+  const [sort, setSort] = useState("data-terbaru");
+  const [page, setPage] = useState(1);
+  const [maxPage, setMaxPage] = useState(1);
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => {
     setIsOpen(false);
     setModalInfo("Isilah form di bawah ini!");
     setName("");
+    setFormValues(() => {
+      const initialValues = Array.from(
+        new Set(optionData.map(item => item.kriteria))
+      ).reduce<Record<string, string>>(
+        (acc, kriteria) => ({ ...acc, [kriteria]: "" }),
+        {}
+      );
+      return initialValues;
+    });
   };
 
   async function fetchData() {
-    const res = await axios.get(`/api/alternatif`);
+    const res = await axios.post(
+      `/api/alternatif`,
+      {
+        sort: sort,
+        page: page,
+      },
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
     setData(res.data);
     setLoading(false);
   }
 
+  async function fetchOptionData() {
+    const res = await axios.get(`/api/sub-kriteria/all`);
+    setOptionData(res.data.data);
+
+    const initialValues = Array.from(
+      new Set(optionData.map((item: OptionData) => item.kriteria))
+    ).reduce<Record<string, string>>(
+      (acc, kriteria) => ({ ...acc, [kriteria]: "" }),
+      {}
+    );
+    setFormValues(initialValues);
+  }
+
   async function addData(
     name: string,
-    kriteria: { [kriteria: string]: string },
+    kriteria: Record<string, string>,
     e: FormEvent
   ) {
     try {
@@ -85,9 +137,9 @@ export default function Alternatif() {
   }
 
   async function editData(
-    kriteria: string,
     name: string,
     oldName: string,
+    kriteria: Record<string, string>,
     e: FormEvent
   ) {
     try {
@@ -95,9 +147,9 @@ export default function Alternatif() {
       await axios.post(
         `/api/alternatif/edit`,
         {
-          kriteria: kriteria,
           name: name,
           oldName: oldName,
+          kriteria: JSON.stringify(kriteria),
         },
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -111,12 +163,34 @@ export default function Alternatif() {
     }
   }
 
+  const handleOptionChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormValues(prevValues => ({
+      ...prevValues,
+      [name]: value,
+    }));
+  };
+
   useEffect(() => {
     fetchData();
+    fetchOptionData();
   }, []);
 
-  const notifyAddData = () => toast.success("Kriteria berhasil ditambahkan!");
-  const notifyEditData = () => toast.success("Kriteria berhasil diubah!");
+  // useEffect(() => {
+  //   if (page < 1) setPage(1);
+  //   if (page == maxPage) setPage(maxPage);
+  // }, [page]);
+
+  useEffect(() => {
+    fetchData();
+  }, [sort, page]);
+
+  useEffect(() => {
+    if (data) setMaxPage(Math.ceil(data?.length / 100));
+  }, [data]);
+
+  const notifyAddData = () => toast.success("Alternatif berhasil ditambahkan!");
+  const notifyEditData = () => toast.success("Alternatif berhasil diubah!");
 
   if (loading) {
     return (
@@ -154,7 +228,7 @@ export default function Alternatif() {
         <div className="w-full h-full bg-white flex flex-col">
           <div className="flex px-4 py-8 flex-row border h-10 items-center">
             <p className="text-2xl font-semibold">
-              {action === "add" ? "Tambah Kriteria" : "Edit Kriteria"}
+              {action === "add" ? "Tambah Alternatif" : "Edit Alternatif"}
             </p>
           </div>
           <div
@@ -169,47 +243,12 @@ export default function Alternatif() {
             <form
               className="mx-12"
               onSubmit={e => {
-                if (action === "add") addData(name, kriteria || {}, e);
-                if (action === "edit") editData(name, kriteria, oldName, e);
+                if (action === "add") addData(name, formValues, e);
+                if (action === "edit") editData(name, oldName, formValues, e);
               }}>
-              {data?.data[0].kriteria && (
-                <>
-                  {Object.keys(data?.data[0].kriteria).map(
-                    (kriteria, index) => (
-                      <div className="flex flex-col" key={index}>
-                        <label
-                          htmlFor={kriteria}
-                          className="text-sm font-semibold">
-                          {kriteria.charAt(0).toUpperCase() + kriteria.slice(1)}
-                        </label>
-                        <input
-                          type="text"
-                          name={kriteria}
-                          id={kriteria}
-                          className="border rounded px-2 py-1 mb-4"
-                          value={kriteria}
-                        />
-                      </div>
-                    )
-                  )}
-                </>
-              )}
-              {/* <div className="flex flex-col">
-                <label htmlFor="lingkungan" className="text-sm font-semibold">
-                  Lingkungan
-                </label>
-                <input
-                  type="text"
-                  name="lingkungan"
-                  id="lingkungan"
-                  className="border rounded px-2 py-1 mb-4"
-                  disabled
-                  value={"Sistem Pendukung Keputusan Laptop Terbaik"}
-                />
-              </div>
               <div className="flex flex-col">
                 <label htmlFor="name" className="text-sm font-semibold">
-                  Nama Kriteria
+                  Nama Alternatif
                 </label>
                 <input
                   type="text"
@@ -219,7 +258,31 @@ export default function Alternatif() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                 />
-              </div> */}
+              </div>
+              {Object.keys(formValues).map(kriteria => (
+                <div className="flex flex-col" key={kriteria}>
+                  <label htmlFor={kriteria} className="text-sm font-semibold">
+                    {kriteria}
+                  </label>
+                  <select
+                    id={kriteria}
+                    name={kriteria}
+                    value={formValues[kriteria]}
+                    onChange={handleOptionChange}
+                    className="border rounded px-2 py-1 mb-6">
+                    <option value="" hidden>
+                      -- Pilih {kriteria} --
+                    </option>
+                    {optionData
+                      .filter(item => item.kriteria === kriteria)
+                      .map(option => (
+                        <option key={option._id} value={option.name}>
+                          {option.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              ))}
               <button
                 type="submit"
                 className="w-full bg-azure-200 py-2 rounded shadow active:scale-105 duration-150">
@@ -255,7 +318,35 @@ export default function Alternatif() {
           <div className="flex flex-col py-4 px-6 bg-white">
             <div className="flex flex-row justify-between mb-4">
               <div className="flex flex-row items-center gap-2">
-                <p>Pilih Kriteria : </p>
+                <select
+                  name="sorter"
+                  id="sorter"
+                  className="bg-azure-700 text-white text-sm font-medium pt-2 pb-3 pl-2 pr-3 border-r-[8px] border-r-azure-700 flex items-center flex-row rounded-md active:scale-105 duration-150"
+                  value={sort}
+                  onChange={e => setSort(e.target.value)}>
+                  <option className="bg-white text-black" value="data-terbaru">
+                    Data terbaru
+                  </option>
+                  <option className="bg-white text-black" value="data-terlama">
+                    Data terlama
+                  </option>
+                  <option className="bg-white text-black" value="nama-asc">
+                    Nama ascending
+                  </option>
+                  <option className="bg-white text-black" value="nama-desc">
+                    Nama descending
+                  </option>
+                  <option
+                    className="bg-white text-black"
+                    value="laptop-terbaik">
+                    Laptop terbaik
+                  </option>
+                  <option
+                    className="bg-white text-black"
+                    value="laptop-terburuk">
+                    Laptop terburuk
+                  </option>
+                </select>
               </div>
               <div className="flex flex-row items-center">
                 <p>Search :</p>
@@ -269,16 +360,46 @@ export default function Alternatif() {
               </div>
             </div>
             <div className="mb-4">
-              <AlternatifTable alternatif={data?.data || []} />
+              <AlternatifTable
+                alternatif={data?.data || []}
+                fetchData={fetchData}
+                openModal={openModal}
+                setAction={setAction}
+                setName={setName}
+                setOldName={setOldName}
+              />
             </div>
             <div className="flex flex-row justify-between items-center">
               <div>
                 <p>
-                  Menampilkan 1 s/d {data?.data.length} dari {data?.data.length}{" "}
-                  kriteria
+                  Menampilkan 1 s/d{" "}
+                  {data?.data?.length && data.data.length < 100
+                    ? data.data.length
+                    : 100}{" "}
+                  dari {data?.length} kriteria
                 </p>
               </div>
-              <div className="border rounded flex flex-row"></div>
+              <div className="flex flex-row">
+                <button
+                  className="uppercase border border-azure-800 rounded px-1 py-0.5 text-azure-800 font-bold active:scale-105 duration-150"
+                  onClick={() => {
+                    if (page == 1) return setPage(1);
+                    setPage(page - 1);
+                  }}>
+                  <BsCaretLeftFill />
+                </button>
+                <p className="mx-2 px-2 py-0.5 border border-azure-800 rounded">
+                  {page}
+                </p>
+                <button
+                  className="uppercase border border-azure-800 rounded px-1 py-0.5 text-azure-800 font-bold active:scale-105 duration-150"
+                  onClick={() => {
+                    if (page == maxPage) return setPage(maxPage);
+                    setPage(page + 1);
+                  }}>
+                  <BsCaretRightFill />
+                </button>
+              </div>
             </div>
           </div>
         </div>
