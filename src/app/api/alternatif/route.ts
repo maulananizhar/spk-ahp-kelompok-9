@@ -8,21 +8,74 @@ const client = new MongoClient(process.env.MONGODB_URL || "", {
   },
 });
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
     await client.connect();
+
+    const formData = await req.formData();
+
+    const sort: FormDataEntryValue =
+      (formData.get("sort") as string) || "data-terbaru";
+    const page: FormDataEntryValue = (formData.get("page") as string) || "1";
+
+    if (sort === null || sort === "") {
+      return Response.json(
+        {
+          status: "error",
+          message: "Sort tidak boleh kosong",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+    if (page === null || page === "") {
+      return Response.json(
+        {
+          status: "error",
+          message: "Page tidak boleh kosong",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
     const mongodb = await client
       .db(process.env.DB_NAME)
       .collection("alternatif")
       .find()
+      .limit(100)
+      .sort(
+        sort == "data-terbaru"
+          ? { _id: -1 }
+          : sort == "data-terlama"
+          ? { _id: 1 }
+          : sort == "nama-asc"
+          ? { name: 1 }
+          : sort == "nama-desc"
+          ? { name: -1 }
+          : sort == "laptop-terbaik"
+          ? { eigen: -1 }
+          : sort == "laptop-terburuk"
+          ? { eigen: 1 }
+          : { _id: -1 }
+      )
+      .skip((parseInt(page) - 1) * 100)
       .toArray();
+
+    const length: number = await client
+      .db(process.env.DB_NAME)
+      .collection("alternatif")
+      .find()
+      .count();
 
     return Response.json(
       {
         status: "success",
         message: "Data berhasil ditemukan",
         data: mongodb,
+        length: length,
       },
       {
         status: 200,

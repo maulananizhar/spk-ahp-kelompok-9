@@ -27,10 +27,24 @@ export async function POST(req: Request) {
     const formData = await req.formData();
 
     const name: FormDataEntryValue = (formData.get("name") as string) || "";
+    const oldName: FormDataEntryValue =
+      (formData.get("oldName") as string) || "";
     const kriteria: FormDataEntryValue =
       (formData.get("kriteria") as string) || "";
 
     if (name === null || name === "") {
+      return Response.json(
+        {
+          status: "error",
+          message: "Name tidak boleh kosong",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (oldName === null || oldName === "") {
       return Response.json(
         {
           status: "error",
@@ -59,15 +73,15 @@ export async function POST(req: Request) {
     const oldData = await client
       .db(process.env.DB_NAME)
       .collection("alternatif")
-      .find({ name: { $regex: name, $options: "i" } })
+      .find({ name: formData.get("name") })
       .toArray();
 
     // Validation for duplicate data
-    if (oldData.length > 0) {
+    if (oldData.length > 0 && name !== oldName) {
       return Response.json(
         {
           status: "error",
-          message: "Data sudah tersedia",
+          message: "Data sudah ada",
         },
         {
           status: 400,
@@ -96,19 +110,25 @@ export async function POST(req: Request) {
 
     const total = calculateEigen(eigen as EigenType, JSON.parse(kriteria));
 
+    // Update data to MongoDB
     const mongodb = await client
       .db(process.env.DB_NAME)
       .collection("alternatif")
-      .insertOne({
-        name: name,
-        kriteria: JSON.parse(kriteria),
-        eigen: total,
-      });
+      .updateOne(
+        { name: oldName },
+        {
+          $set: {
+            name: name,
+            kriteria: JSON.parse(kriteria),
+            eigen: total,
+          },
+        }
+      );
 
     return Response.json(
       {
         status: "success",
-        message: "Data berhasil ditambahkan",
+        message: "Data added",
         mongodb,
         data: {
           name: name,
