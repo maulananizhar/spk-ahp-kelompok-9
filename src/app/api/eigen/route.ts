@@ -8,6 +8,8 @@ const client = new MongoClient(process.env.MONGODB_URL || "", {
   },
 });
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     await client.connect();
