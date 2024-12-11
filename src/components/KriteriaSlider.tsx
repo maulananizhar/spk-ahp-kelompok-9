@@ -2,9 +2,10 @@ import { BsBox } from "react-icons/bs";
 import { Slider } from "rsuite";
 import "rsuite/Slider/styles/index.css";
 import "rsuite/RangeSlider/styles/index.css";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "@/app/globals.css";
 import { matrixConverter } from "@/libs/matrixConverter";
+import { AuthContext } from "@/services/storage";
 
 export default function KriteriaSlider({
   kriteria1,
@@ -22,6 +23,7 @@ export default function KriteriaSlider({
     value: number
   ) => void;
 }) {
+  const auth = useContext(AuthContext);
   const [value, setValue] = useState(rawValue);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function KriteriaSlider({
             handleStyle={{
               borderRadius: 10,
               color: "#fff",
+              backgroundColor: auth.role == "user" ? "#555" : "#1242a2",
               fontSize: 12,
               width: 32,
               height: 22,
@@ -60,6 +63,7 @@ export default function KriteriaSlider({
             tooltip={false}
             handleTitle={labels[value]}
             onChange={setValue}
+            disabled={auth.role == "user" ? true : false}
           />
         </div>
         <div className="flex flex-row justify-between mx-8 mb-6 items-end">

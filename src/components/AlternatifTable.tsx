@@ -1,6 +1,8 @@
 "use client";
 
+import { AuthContext } from "@/services/storage";
 import axios from "axios";
+import { useContext } from "react";
 import toast from "react-hot-toast";
 
 interface AlternatifType {
@@ -25,6 +27,8 @@ export default function AlternatifTable({
   openModal: () => void;
   fetchData: () => void;
 }) {
+  const auth = useContext(AuthContext);
+
   async function deleteData(id: string) {
     await axios.delete(`/api/alternatif/delete`, {
       data: { id: id },
@@ -52,7 +56,12 @@ export default function AlternatifTable({
               </>
             )}
             <th className="w-1/12 border py-2 px-3">Skor</th>
-            <th className="w-2/12 border py-2 px-3">Aksi</th>
+            <th
+              className={`w-2/12 border py-2 px-3 ${
+                auth.role == "user" ? "hidden" : ""
+              }`}>
+              Aksi
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -68,9 +77,11 @@ export default function AlternatifTable({
                 </td>
               ))}
               <td className="w-1/12 text-center border py-2 px-3">
-                {(item.eigen * 100000).toFixed(0)}
+                {item.eigen.toFixed(5)}
               </td>
-              <td className="w-2/12 border py-2 px-3">
+              <td
+                className={`w-2/12 border py-2 px-3 
+                ${auth.role == "user" ? "hidden" : ""}`}>
                 <div className="flex flex-row justify-evenly text-center">
                   <button
                     className="uppercase text-xs border border-azure-800 rounded px-2 py-1 text-azure-800 font-bold active:scale-105 duration-150"

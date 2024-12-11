@@ -1,4 +1,6 @@
+import { AuthContext } from "@/services/storage";
 import axios from "axios";
+import { useContext } from "react";
 import toast from "react-hot-toast";
 
 export default function KriteriaTable({
@@ -22,6 +24,8 @@ export default function KriteriaTable({
   initPair: () => void;
   deleteLambda: () => void;
 }) {
+  const auth = useContext(AuthContext);
+
   async function deleteData(name: string) {
     await axios.delete(`/api/kriteria/delete`, {
       data: { name: name },
@@ -39,7 +43,10 @@ export default function KriteriaTable({
       <tr key={item._id}>
         <td className="w-1/12 border py-2 px-3 text-center">{index + 1}</td>
         <td className="w-8/12 border py-2 px-3">{item.name}</td>
-        <td className="w-2/12 border py-2 px-3">
+        <td
+          className={`w-2/12 border py-2 px-3 ${
+            auth.role == "user" ? "hidden" : ""
+          }`}>
           <div className="flex flex-row justify-evenly text-center">
             <button
               className="uppercase text-xs border border-azure-800 rounded px-2 py-1 text-azure-800 font-bold active:scale-105 duration-150"
