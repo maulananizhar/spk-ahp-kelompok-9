@@ -43,6 +43,18 @@ export async function POST(req: Request) {
       );
     }
 
+    if (JSON.parse(pair).length === 0) {
+      return Response.json(
+        {
+          status: "error",
+          message: "Pair tidak boleh kosong",
+        },
+        {
+          status: 200,
+        }
+      );
+    }
+
     // Update data to MongoDB
     const mongodb = await client
       .db(process.env.DB_NAME)
