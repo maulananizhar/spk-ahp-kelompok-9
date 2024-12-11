@@ -5,7 +5,7 @@
 //   return result.slice(1, -1);
 // }
 
-import { KriteriaType } from "@/types/kriteria";
+import { KriteriaType } from "@/types/KriteriaType";
 
 export function getEigenValue(
   attributes: KriteriaType[],
