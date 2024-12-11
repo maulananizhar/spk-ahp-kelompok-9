@@ -1,8 +1,14 @@
 import { transformData } from "@/libs/transformData";
-import { useEffect, useState } from "react";
+import { AuthContext } from "@/services/storage";
+import { PayloadToken } from "@/types/PayloadToken";
+import { RefreshType } from "@/types/RefreshType";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useContext, useEffect, useState } from "react";
 import Tree from "react-d3-tree";
 import { BsCalculator } from "react-icons/bs";
 import { Mosaic } from "react-loading-indicators";
+import jwt from "jsonwebtoken";
 
 interface EigenType {
   kriteria?: {
@@ -16,6 +22,9 @@ interface EigenType {
 }
 
 export default function Perhitungan({ eigen }: { eigen: EigenType }) {
+  const router = useRouter();
+  const auth = useContext(AuthContext);
+
   const [data, setData] = useState<{
     name: string;
     children: {
@@ -26,6 +35,31 @@ export default function Perhitungan({ eigen }: { eigen: EigenType }) {
   }>();
   const [loading, setLoading] = useState(true);
 
+  async function refreshToken() {
+    try {
+      const response = await axios.post<RefreshType>(
+        "/api/auth/token",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      auth.setToken(response.data.accessToken);
+      const decoded = jwt.decode(response.data.accessToken) as PayloadToken;
+
+      if (decoded) {
+        auth.setId(decoded._id);
+        auth.setUsername(decoded.username);
+        auth.setRole(decoded.role);
+        auth.setExpire(decoded.exp);
+        setLoading(false);
+      }
+    } catch {
+      router.push("/auth/login");
+    }
+  }
+
   useEffect(() => {
     if (eigen) {
       setData(transformData(eigen));
@@ -34,7 +68,7 @@ export default function Perhitungan({ eigen }: { eigen: EigenType }) {
 
   useEffect(() => {
     if (data) {
-      setLoading(false);
+      refreshToken().then(() => setLoading(false));
     }
   }, [data]);
 
@@ -53,7 +87,7 @@ export default function Perhitungan({ eigen }: { eigen: EigenType }) {
         <div className="flex flex-row justify-between items-center">
           <div className="flex flex-row items-center text-3xl gap-4">
             <BsCalculator />
-            <p className="font-semibold">Data Perhitungan</p>
+            <p className="font-semibold">Hasil Perhitungan</p>
           </div>
           <div></div>
         </div>

@@ -12,9 +12,9 @@ import {
   MenuButton,
   MenuProps,
 } from "@szhsin/react-menu";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { KriteriaType } from "@/types/kriteria";
+import { KriteriaType } from "@/types/KriteriaType";
 import Modal from "react-modal";
 import "rsuite/Slider/styles/index.css";
 import "rsuite/RangeSlider/styles/index.css";
@@ -29,6 +29,11 @@ import { riGenerate } from "@/libs/riGenerate";
 import { getEigenValue } from "@/libs/getEigenValue";
 import SubKriteriaTable from "@/components/SubKriteriaTable";
 import { Mosaic } from "react-loading-indicators";
+import { useRouter } from "next/navigation";
+import { AuthContext } from "@/services/storage";
+import { RefreshType } from "@/types/RefreshType";
+import { PayloadToken } from "@/types/PayloadToken";
+import jwt from "jsonwebtoken";
 
 const Menu = (props: MenuProps) => (
   <MenuInner
@@ -66,6 +71,9 @@ export default function Kriteria({
     [kriteria: string]: { [subKriteria: string]: number };
   }) => void;
 }) {
+  const router = useRouter();
+  const auth = useContext(AuthContext);
+
   const [data, setData] = useState<APIType>();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [action, setAction] = useState("");
@@ -93,6 +101,34 @@ export default function Kriteria({
   const [CI, setCI] = useState<string | number>(0);
   const [RI, setRI] = useState<number>(0);
   const [CR, setCR] = useState<string | number>(0);
+
+  async function refreshToken() {
+    try {
+      const response = await axios.post<RefreshType>(
+        "/api/auth/token",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      auth.setToken(response.data.accessToken);
+      const decoded = jwt.decode(response.data.accessToken) as PayloadToken;
+
+      if (decoded) {
+        auth.setId(decoded._id);
+        auth.setUsername(decoded.username);
+        auth.setRole(decoded.role);
+        auth.setExpire(decoded.exp);
+        fetchData()
+          .then(() => fetchPair())
+          .then(() => fetchParent())
+          .then(() => setLoading(false));
+      }
+    } catch {
+      router.push("/auth/login");
+    }
+  }
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => {
@@ -257,9 +293,7 @@ export default function Kriteria({
   }
 
   useEffect(() => {
-    fetchData();
-    fetchPair();
-    fetchParent();
+    refreshToken();
   }, []);
 
   useEffect(() => {
@@ -268,10 +302,6 @@ export default function Kriteria({
   }, [kriteria]);
 
   useEffect(() => {
-    if (pair) {
-      setLoading(false);
-    }
-
     const timeout = setTimeout(() => {
       setMatrix(transformMatrix(pair || []));
       setLambda([]);
@@ -291,7 +321,7 @@ export default function Kriteria({
     const timeout = setTimeout(() => {
       setEigen(processMatrix(normalization || []));
       if (normalization?.length !== 0) {
-        addPair(kriteria, pair || []);
+        addPair(kriteria, pair);
         notifyUpdatePair();
         setLambda(
           calculateLambda(processMatrix(normalization || []), matrix || [])
@@ -419,11 +449,12 @@ export default function Kriteria({
           </div>
           <div>
             <button
-              className="bg-azure-700 text-white pl-2 pr-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150"
+              className="bg-azure-700 text-white pl-2 pr-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150 disabled:hidden"
               onClick={() => {
                 setAction("add");
                 openModal();
-              }}>
+              }}
+              disabled={auth.role == "user" ? true : false}>
               <BsPlus className="text-2xl stroke-[0.7]" />
               <p>Tambah Sub-Kriteria</p>
             </button>
@@ -479,7 +510,12 @@ export default function Kriteria({
                     <th className="w-8/12 border py-2 px-3">
                       Nama Sub-Kriteria
                     </th>
-                    <th className="w-2/12 border py-2 px-3">Aksi</th>
+                    <th
+                      className={`w-2/12 border py-2 px-3  ${
+                        auth.role == "user" ? "hidden" : ""
+                      }`}>
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -540,7 +576,7 @@ export default function Kriteria({
           </div>
           <div>
             <button
-              className="bg-azure-700 text-white px-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150"
+              className="bg-azure-700 text-white px-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150 disabled:hidden"
               onClick={() => {
                 if (lambda?.length == 0) {
                   toast.error("Data perbandingan belum disimpan!");
@@ -555,7 +591,8 @@ export default function Kriteria({
                   });
                   toast.success("Eigen Value berhasil disimpan!");
                 }
-              }}>
+              }}
+              disabled={auth.role == "user" ? true : false}>
               <BsFloppy className="mr-2 stroke-[0.2]" />
               <p>Simpan Eigen Value</p>
             </button>

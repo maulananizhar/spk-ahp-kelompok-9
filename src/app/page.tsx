@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   BsBox,
+  BsBoxArrowRight,
   BsBoxes,
   BsCalculator,
-  BsGraphUp,
   BsHouseDoor,
   BsLaptop,
 } from "react-icons/bs";
@@ -16,6 +16,11 @@ import SubKriteria from "@/modules/SubKriteria";
 import Perhitungan from "@/modules/Perhitungan";
 import axios from "axios";
 import Alternatif from "@/modules/Alternatif";
+import { useRouter } from "next/navigation";
+import { AuthContext } from "@/services/storage";
+import jwt from "jsonwebtoken";
+import { Mosaic } from "react-loading-indicators";
+import Dashboard from "@/modules/Dashboard";
 
 interface EigenType {
   kriteria?: {
@@ -28,10 +33,64 @@ interface EigenType {
   };
 }
 
+type PayloadToken = {
+  _id: string;
+  username: string;
+  role: string;
+  iat: number;
+  exp: number;
+};
+
+type RefreshType = {
+  status: string;
+  message: string;
+  accessToken: string;
+};
+
 export default function Home() {
+  const router = useRouter();
+  const auth = useContext(AuthContext);
+
+  const [loading, setLoading] = useState<boolean>(true);
   const [menu, setMenu] = useState("dashboard");
   const [eigen, setEigen] = useState<EigenType>({});
   const [eigenData, setEigenData] = useState<EigenType>();
+
+  async function refreshToken() {
+    try {
+      const response = await axios.post<RefreshType>(
+        "/api/auth/token",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      auth.setToken(response.data.accessToken);
+      const decoded = jwt.decode(response.data.accessToken) as PayloadToken;
+
+      if (decoded) {
+        auth.setId(decoded._id);
+        auth.setUsername(decoded.username);
+        auth.setRole(decoded.role);
+        auth.setExpire(decoded.exp);
+        setLoading(false);
+      }
+    } catch {
+      router.push("/auth/login");
+    }
+  }
+
+  async function logoutHandler() {
+    try {
+      await axios.delete(`/api/auth/logout`, {
+        withCredentials: true,
+      });
+      router.push("/auth/login");
+    } catch {
+      router.push("/auth/login");
+    }
+  }
 
   const changeKriteriaEigen = (data: { [kriteria: string]: number }) => {
     setEigen({ ...eigen, kriteria: data });
@@ -73,6 +132,7 @@ export default function Home() {
 
   useEffect(() => {
     getEigen();
+    refreshToken();
   }, []);
 
   useEffect(() => {
@@ -98,6 +158,15 @@ export default function Home() {
       return;
     }
   }, [eigen]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[80vh]">
+        <Mosaic color="#1242A2" size="large" />
+        <p className="text-azure-700 font-bold text-2xl mt-4">Mohon tunggu</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -147,17 +216,19 @@ export default function Home() {
             }`}
             onClick={() => setMenu("perhitungan")}>
             <BsCalculator />
-            <p className="font-semibold">Data Perhitungan</p>
-          </button>
-          <button
-            className={`py-4 flex flex-row items-center gap-3 active:scale-105 duration-150 ${
-              menu === "final" ? "text-azure-800" : "text-azure-700"
-            }`}
-            onClick={() => setMenu("final")}>
-            <BsGraphUp />
-            <p className="font-semibold">Data Final</p>
+            <p className="font-semibold">Hasil Perhitungan</p>
           </button>
         </div>
+        <hr className="mt-auto mx-6 border-red-800" />
+        <div className="my-4 mx-4 flex flex-col">
+          <button
+            className="py-2 px-3 mt-auto flex flex-row items-center gap-3 active:scale-105 duration-150 text-red-800"
+            onClick={logoutHandler}>
+            <BsBoxArrowRight />
+            <p className="font-semibold">Keluar</p>
+          </button>
+        </div>
+        <hr className="mx-6 mb-4 border-red-800" />
       </div>
       <div className="h-screen flex flex-row">
         <div className="w-1/6"></div>
@@ -176,7 +247,7 @@ export default function Home() {
           </div>
           <div className="p-8 bg-gray-100">
             {menu === "dashboard" ? (
-              <p>dashboard</p>
+              <Dashboard />
             ) : menu === "kriteria" ? (
               <Kriteria changeKriteriaEigen={changeKriteriaEigen} />
             ) : menu === "sub-kriteria" ? (
@@ -185,8 +256,6 @@ export default function Home() {
               <Alternatif />
             ) : menu === "perhitungan" ? (
               <Perhitungan eigen={eigen} />
-            ) : menu === "penilaian" ? (
-              <p>penilaian</p>
             ) : (
               <p>{menu}</p>
             )}

@@ -5,7 +5,7 @@ import {
   BsPlus,
   BsTable,
 } from "react-icons/bs";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "react-modal";
 import "rsuite/Slider/styles/index.css";
@@ -13,6 +13,11 @@ import "rsuite/RangeSlider/styles/index.css";
 import toast, { Toaster } from "react-hot-toast";
 import { Mosaic } from "react-loading-indicators";
 import AlternatifTable from "@/components/AlternatifTable";
+import { useRouter } from "next/navigation";
+import { AuthContext } from "@/services/storage";
+import { RefreshType } from "@/types/RefreshType";
+import { PayloadToken } from "@/types/PayloadToken";
+import jwt from "jsonwebtoken";
 
 type APIType = {
   status: string;
@@ -52,6 +57,9 @@ const customStyles = {
 };
 
 export default function Alternatif() {
+  const router = useRouter();
+  const auth = useContext(AuthContext);
+
   const [data, setData] = useState<APIType>();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [action, setAction] = useState("");
@@ -66,6 +74,31 @@ export default function Alternatif() {
   const [sort, setSort] = useState("data-terbaru");
   const [page, setPage] = useState(1);
   const [maxPage, setMaxPage] = useState(1);
+
+  async function refreshToken() {
+    try {
+      const response = await axios.post<RefreshType>(
+        "/api/auth/token",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      auth.setToken(response.data.accessToken);
+      const decoded = jwt.decode(response.data.accessToken) as PayloadToken;
+
+      if (decoded) {
+        auth.setId(decoded._id);
+        auth.setUsername(decoded.username);
+        auth.setRole(decoded.role);
+        auth.setExpire(decoded.exp);
+        fetchData().then(() => setLoading(false));
+      }
+    } catch {
+      router.push("/auth/login");
+    }
+  }
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => {
@@ -89,13 +122,13 @@ export default function Alternatif() {
       {
         sort: sort,
         page: page,
+        limit: 100,
       },
       {
         headers: { "Content-Type": "multipart/form-data" },
       }
     );
     setData(res.data);
-    setLoading(false);
   }
 
   async function fetchOptionData() {
@@ -172,14 +205,9 @@ export default function Alternatif() {
   };
 
   useEffect(() => {
-    fetchData();
     fetchOptionData();
+    refreshToken();
   }, []);
-
-  // useEffect(() => {
-  //   if (page < 1) setPage(1);
-  //   if (page == maxPage) setPage(maxPage);
-  // }, [page]);
 
   useEffect(() => {
     fetchData();
@@ -300,11 +328,12 @@ export default function Alternatif() {
           </div>
           <div>
             <button
-              className="bg-azure-700 text-white pl-2 pr-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150"
+              className="bg-azure-700 text-white pl-2 pr-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150 disabled:hidden"
               onClick={() => {
                 setAction("add");
                 openModal();
-              }}>
+              }}
+              disabled={auth.role == "user" ? true : false}>
               <BsPlus className="text-2xl stroke-[0.7]" />
               <p>Tambah Alternatif</p>
             </button>

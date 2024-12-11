@@ -1,7 +1,7 @@
 import { BsBox, BsCalculator, BsFloppy, BsPlus, BsTable } from "react-icons/bs";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { KriteriaType } from "@/types/kriteria";
+import { KriteriaType } from "@/types/KriteriaType";
 import Modal from "react-modal";
 import "rsuite/Slider/styles/index.css";
 import "rsuite/RangeSlider/styles/index.css";
@@ -16,6 +16,11 @@ import { calculateLambda } from "@/libs/calculateLambda";
 import { riGenerate } from "@/libs/riGenerate";
 import { getEigenValue } from "@/libs/getEigenValue";
 import { Mosaic } from "react-loading-indicators";
+import { useRouter } from "next/navigation";
+import { AuthContext } from "@/services/storage";
+import jwt from "jsonwebtoken";
+import { RefreshType } from "@/types/RefreshType";
+import { PayloadToken } from "@/types/PayloadToken";
 
 type APIType = {
   status: string;
@@ -44,6 +49,9 @@ export default function Kriteria({
 }: {
   changeKriteriaEigen: (data: { [kriteria: string]: number }) => void;
 }) {
+  const router = useRouter();
+  const auth = useContext(AuthContext);
+
   const [data, setData] = useState<APIType>();
   const [modalIsOpen, setIsOpen] = useState(false);
   const [action, setAction] = useState("");
@@ -59,7 +67,7 @@ export default function Kriteria({
       intensitas: number;
       value: number;
     }[]
-  >();
+  >([]);
 
   const [matrix, setMatrix] = useState<(string | number)[][]>();
   const [normalization, setNormalization] = useState<(string | number)[][]>();
@@ -69,6 +77,33 @@ export default function Kriteria({
   const [CI, setCI] = useState<string | number>(0);
   const [RI, setRI] = useState<number>(0);
   const [CR, setCR] = useState<string | number>(0);
+
+  async function refreshToken() {
+    try {
+      const response = await axios.post<RefreshType>(
+        "/api/auth/token",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      auth.setToken(response.data.accessToken);
+      const decoded = jwt.decode(response.data.accessToken) as PayloadToken;
+
+      if (decoded) {
+        auth.setId(decoded._id);
+        auth.setUsername(decoded.username);
+        auth.setRole(decoded.role);
+        auth.setExpire(decoded.exp);
+        fetchData()
+          .then(() => fetchPair())
+          .then(() => setLoading(false));
+      }
+    } catch {
+      router.push("/auth/login");
+    }
+  }
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => {
@@ -215,8 +250,7 @@ export default function Kriteria({
   }
 
   useEffect(() => {
-    fetchData();
-    fetchPair();
+    refreshToken();
   }, []);
 
   // useEffect(() => {
@@ -227,9 +261,12 @@ export default function Kriteria({
   // }, [data]);
 
   useEffect(() => {
-    if (pair) {
-      setLoading(false);
-    }
+    // if (pair && pair.length > 0 && data) {
+    //   setLoading(false);
+    // }
+    // if ((data?.data?.length ?? 0) < 1) {
+    //   setLoading(false);
+    // }
 
     const timeout = setTimeout(() => {
       setMatrix(transformMatrix(pair || []));
@@ -250,7 +287,7 @@ export default function Kriteria({
     const timeout = setTimeout(() => {
       setEigen(processMatrix(normalization || []));
       if (normalization?.length !== 0) {
-        addPair(pair || []);
+        addPair(pair);
         notifyUpdatePair();
         setLambda(
           calculateLambda(processMatrix(normalization || []), matrix || [])
@@ -378,11 +415,12 @@ export default function Kriteria({
           </div>
           <div>
             <button
-              className="bg-azure-700 text-white pl-2 pr-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150"
+              className="bg-azure-700 text-white pl-2 pr-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150 disabled:hidden"
               onClick={() => {
                 setAction("add");
                 openModal();
-              }}>
+              }}
+              disabled={auth.role == "user" ? true : false}>
               <BsPlus className="text-2xl stroke-[0.7]" />
               <p>Tambah Kriteria</p>
             </button>
@@ -413,7 +451,12 @@ export default function Kriteria({
                   <tr>
                     <th className="w-1/12 border py-2 px-3">No</th>
                     <th className="w-8/12 border py-2 px-3">Nama Kriteria</th>
-                    <th className="w-2/12 border py-2 px-3">Aksi</th>
+                    <th
+                      className={`w-2/12 border py-2 px-3  ${
+                        auth.role == "user" ? "hidden" : ""
+                      }`}>
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -474,7 +517,7 @@ export default function Kriteria({
           </div>
           <div>
             <button
-              className="bg-azure-700 text-white px-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150"
+              className="bg-azure-700 text-white px-3 py-1 flex items-center flex-row rounded-md active:scale-105 duration-150 disabled:hidden"
               onClick={() => {
                 if (lambda?.length == 0) {
                   toast.error("Data perbandingan belum disimpan!");
@@ -486,7 +529,8 @@ export default function Kriteria({
                   );
                   toast.success("Eigen Value berhasil disimpan!");
                 }
-              }}>
+              }}
+              disabled={auth.role == "user" ? true : false}>
               <BsFloppy className="mr-2 stroke-[0.2]" />
               <p>Simpan Eigen Value</p>
             </button>
