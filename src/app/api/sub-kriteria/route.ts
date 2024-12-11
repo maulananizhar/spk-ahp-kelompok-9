@@ -17,22 +17,10 @@ export async function POST(req: Request) {
     const kriteria: FormDataEntryValue =
       (formData.get("kriteria") as string) || "";
 
-    if (kriteria === null || kriteria === "") {
-      return Response.json(
-        {
-          status: "error",
-          message: "Kriteria tidak boleh kosong",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
     const data = await client
       .db(process.env.DB_NAME)
       .collection("subKriteria")
-      .find({ kriteria: kriteria })
+      .find(kriteria === "" ? {} : { kriteria: kriteria })
       .sort({ _id: 1 })
       .toArray();
 
