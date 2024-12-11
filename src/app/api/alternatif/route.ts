@@ -17,6 +17,8 @@ export async function POST(req: Request) {
     const sort: FormDataEntryValue =
       (formData.get("sort") as string) || "data-terbaru";
     const page: FormDataEntryValue = (formData.get("page") as string) || "1";
+    const limit: FormDataEntryValue =
+      (formData.get("limit") as string) || "100";
 
     if (sort === null || sort === "") {
       return Response.json(
@@ -29,23 +31,12 @@ export async function POST(req: Request) {
         }
       );
     }
-    if (page === null || page === "") {
-      return Response.json(
-        {
-          status: "error",
-          message: "Page tidak boleh kosong",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
 
     const mongodb = await client
       .db(process.env.DB_NAME)
       .collection("alternatif")
       .find()
-      .limit(100)
+      .limit(parseInt(limit))
       .sort(
         sort == "data-terbaru"
           ? { _id: -1 }
