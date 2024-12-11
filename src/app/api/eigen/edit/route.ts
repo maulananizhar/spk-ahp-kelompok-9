@@ -42,7 +42,7 @@ export async function POST(req: Request) {
           },
         },
         {
-          upsert: false,
+          upsert: true,
         }
       );
 
