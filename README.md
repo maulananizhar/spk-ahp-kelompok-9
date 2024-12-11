@@ -38,8 +38,8 @@ npm run start
 
 - CRUD pada data kriteria
 - CRUD pada data sub-kriteria
-- CRUD pada data alternatif (on progress)
+- CRUD pada data alternatif
 - Mengelola matriks perbandingan berpasangan antar kriteria
 - Mengelola matriks perbandingan berpasangan antar sub-kriteria
-- Melihat hasil perhitungan AHP dalam bentuk grafik
+- Melihat hasil perhitungan AHP dalam bentuk grafik tree
 - Melihat ranking alternatif berdasarkan hasil perhitungan AHP
