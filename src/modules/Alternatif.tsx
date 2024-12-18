@@ -100,7 +100,7 @@ export default function Alternatif() {
     }
   }
 
-  const openModal = () => setIsOpen(true);
+  const openModal = () => fetchOptionData().then(() => setIsOpen(true));
   const closeModal = () => {
     setIsOpen(false);
     setModalInfo("Isilah form di bawah ini!");
